@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Game Leaderboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the flashy, game-like theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        /* Using the Bungee font for the main title for a retro-game feel */
+        .game-title {
+            font-family: 'Bungee', cursive;
+            color: #ffffff;
+            /* Neon glow effect */
+            text-shadow:
+                0 0 5px #fff,
+                0 0 10px #fff,
+                0 0 20px #00aaff,
+                0 0 30px #00aaff,
+                0 0 40px #00aaff;
+        }
+
+        /* Styling for card-like sections */
+        .card {
+            background-color: rgba(23, 23, 39, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Custom styles for team-specific elements */
+        .team-blue-glow {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            border-color: rgba(59, 130, 246, 0.7);
+        }
+
+        .team-green-glow {
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+            border-color: rgba(34, 197, 94, 0.7);
+        }
+        
+        .team-blue-text-glow {
+            text-shadow: 0 0 8px rgba(59, 130, 246, 0.7);
+        }
+        
+        .team-green-text-glow {
+            text-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+        }
+
+        /* Styling for the form inputs and buttons */
+        .form-input {
+            background-color: #1e1e3f;
+            border: 1px solid #4a4a6a;
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            background-color: #2a2a4f;
+            border-color: #00aaff;
+            box-shadow: 0 0 10px rgba(0, 170, 255, 0.5);
+            outline: none;
+        }
+
+        .btn-submit {
+            background: linear-gradient(45deg, #f857a6, #ff5858);
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(248, 87, 166, 0.5);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 20px rgba(255, 88, 88, 0.7);
+        }
+
+        /* --- New Scroller Styles --- */
+        .score-scroller {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            width: 120px;
+        }
+
+        .scroll-btn {
+            background-color: #2a2a4f;
+            border: 1px solid #4a4a6a;
+            color: #e0e0e0;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            line-height: 1;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .scroll-btn:hover {
+            background-color: #00aaff;
+            box-shadow: 0 0 10px rgba(0, 170, 255, 0.7);
+        }
+
+        .score-display {
+            font-family: 'Bungee', cursive;
+            font-size: 4rem;
+            margin: 0.5rem 0;
+            width: 80px;
+            text-align: center;
+        }
+        /* --- End New Scroller Styles --- */
+
+        /* Custom slider styles */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #4a4a6a;
+            border-radius: 5px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #00aaff;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 8px rgba(0, 170, 255, 0.7);
+        }
+
+        /* Styling for radio buttons */
+        .filter-radio:checked + label {
+            background-color: #00aaff;
+            color: white;
+            border-color: #00aaff;
+        }
+        
+        .history-item:hover {
+            transform: translateX(5px);
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        /* --- New Banner Styles --- */
+        .banner-blue {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.1));
+            border: 2px solid rgba(59, 130, 246, 0.7);
+            text-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+        }
+        .banner-green {
+            background: linear-gradient(90deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.1));
+            border: 2px solid rgba(34, 197, 94, 0.7);
+            text-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+        }
+        .banner-tie {
+             background: linear-gradient(90deg, rgba(107, 114, 128, 0.3), rgba(107, 114, 128, 0.1));
+            border: 2px solid rgba(107, 114, 128, 0.7);
+            text-shadow: 0 0 8px rgba(107, 114, 128, 0.8);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #1a1a2e;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-fixed" style="background-image: linear-gradient(to bottom right, #1a1a2e, #16213e);">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+
+        <!-- Header -->
+        <header class="text-center mb-8 md:mb-12 relative">
+            <h1 class="game-title text-4xl sm:text-5xl md:text-6xl tracking-wider">SEQUENCE</h1>
+            <p class="text-lg text-gray-400">Leaderboard & Score Tracker</p>
+            <button id="settings-btn" class="absolute top-0 right-0 p-2 text-gray-400 hover:text-white transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 5.4 19.4a1.65 1.65 0 0 0-1.82-.33l-.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.82.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82z" />
+                </svg>
+            </button>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- Left Column: Score Entry & Filters -->
+            <div class="md:col-span-1 space-y-6">
+                <!-- Score Entry Card -->
+                <section id="score-entry" class="card rounded-2xl p-6">
+                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-white">Record New Game</h2>
+                    <form id="game-form" class="space-y-4">
+                        <div class="flex justify-around items-center">
+                            <!-- Team Scroller -->
+                            <div class="text-center">
+                                <label id="blue-team-label" class="block text-lg font-medium text-blue-400 mb-2 team-blue-text-glow">Blue Team</label>
+                                <div id="blue-scroller" class="score-scroller team-blue-glow border-2">
+                                    <button type="button" class="scroll-btn scroll-up" data-team="blue">▲</button>
+                                    <div id="blue-score-display" class="score-display text-blue-300">0</div>
+                                    <button type="button" class="scroll-btn scroll-down" data-team="blue">▼</button>
+                                </div>
+                            </div>
+                             <!-- Green Team Scroller -->
+                             <div class="text-center">
+                                <label id="green-team-label" class="block text-lg font-medium text-green-400 mb-2 team-green-text-glow">Green Team</label>
+                                <div id="green-scroller" class="score-scroller team-green-glow border-2">
+                                    <button type="button" class="scroll-btn scroll-up" data-team="green">▲</button>
+                                    <div id="green-score-display" class="score-display text-green-300">0</div>
+                                    <button type="button" class="scroll-btn scroll-down" data-team="green">▼</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" id="submit-button" class="btn-submit w-full font-bold py-3 px-4 rounded-lg shadow-lg !mt-6">
+                            <span id="submit-btn-text">Save Game</span>
+                        </button>
+                        <button type="button" id="cancel-edit-btn" class="hidden w-full bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mt-2 hover:bg-gray-700 transition-colors">Cancel Edit</button>
+                    </form>
+                    <div id="form-message" class="text-center mt-3 text-red-400 text-sm"></div>
+                </section>
+
+                <!-- Filters Card -->
+                <section id="filters" class="card rounded-2xl p-6">
+                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-white">Filters</h2>
+                    <div class="space-y-4">
+                        <div class="flex rounded-md shadow-sm">
+                            <input type="radio" name="filter-type" id="lifetime" value="lifetime" class="sr-only filter-radio" checked>
+                            <label for="lifetime" class="flex-1 text-center py-2 px-4 border border-gray-600 rounded-l-md cursor-pointer transition-colors duration-200">Lifetime</label>
+                            
+                            <input type="radio" name="filter-type" id="games" value="games" class="sr-only filter-radio">
+                            <label for="games" class="flex-1 text-center py-2 px-4 border-t border-b border-gray-600 cursor-pointer transition-colors duration-200">Games</label>
+
+                            <input type="radio" name="filter-type" id="days" value="days" class="sr-only filter-radio">
+                            <label for="days" class="flex-1 text-center py-2 px-4 border border-gray-600 rounded-r-md cursor-pointer transition-colors duration-200">Days</label>
+                        </div>
+                        <div id="slider-container" class="space-y-2 hidden">
+                             <div class="flex justify-between items-center">
+                                <label for="filter-slider" id="slider-label" class="font-medium text-gray-300">Last 10 Games</label>
+                                <span id="slider-value" class="text-lg font-bold text-cyan-400">10</span>
+                            </div>
+                            <input type="range" id="filter-slider" min="1" max="50" value="10" class="w-full">
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Leaderboard & History -->
+            <div class="md:col-span-2 space-y-6">
+                <!-- Leaderboard Card -->
+                <section id="leaderboard" class="card rounded-2xl p-6">
+                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-white">Leaderboard</h2>
+                    <div id="winner-banner" class="text-center p-3 mb-4 rounded-lg text-white font-bold text-xl tracking-wider hidden">
+                        <span id="winner-banner-text"></span>
+                    </div>
+                    <div id="leaderboard-content" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Blue Team Stats -->
+                        <div id="blue-stats" class="p-4 rounded-lg border-2 team-blue-glow transition-all duration-300"></div>
+                        <!-- Green Team Stats -->
+                        <div id="green-stats" class="p-4 rounded-lg border-2 team-green-glow transition-all duration-300"></div>
+                    </div>
+                     <div id="loading-leaderboard" class="text-center py-8 text-gray-400">Loading stats...</div>
+                </section>
+
+                <!-- Game History Card -->
+                <section id="history" class="card rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                        <h2 class="text-2xl font-bold text-white">Game History</h2>
+                        <button id="edit-last-game-btn" class="hidden bg-cyan-600 text-white text-sm font-bold py-1 px-3 rounded-md hover:bg-cyan-700 transition-colors">Edit Last</button>
+                    </div>
+                    <div id="history-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                        <!-- History items will be injected here -->
+                    </div>
+                    <div id="loading-history" class="text-center py-8 text-gray-400">Loading game history...</div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Settings Modal (hidden by default) -->
+        <div id="settings-modal" class="modal-overlay hidden">
+            <div class="modal-content card relative">
+                <button id="close-modal-btn" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-white transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-white">Account Settings</h2>
+                <form id="settings-form" class="space-y-4">
+                    <div>
+                        <label for="blue-team-name" class="block text-sm font-medium text-gray-300">Blue Team Name</label>
+                        <input type="text" id="blue-team-name" placeholder="e.g. The Blue Barracudas" class="form-input mt-1 block w-full rounded-md p-2">
+                    </div>
+                    <div>
+                        <label for="green-team-name" class="block text-sm font-medium text-gray-300">Green Team Name</label>
+                        <input type="text" id="green-team-name" placeholder="e.g. The Green Gators" class="form-input mt-1 block w-full rounded-md p-2">
+                    </div>
+                    <button type="submit" class="btn-submit w-full font-bold py-3 px-4 rounded-lg shadow-lg !mt-6">Save Team Names</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Enable Firestore debug logging
+        setLogLevel('debug');
+        
+        // --- Global Variables (Canvas provides these) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxG-2V9tKpB5CYWqi_kN6liohv6Y6AovY",
+            authDomain: "sequence-41300.firebaseapp.com",
+            projectId: "sequence-41300",
+            storageBucket: "sequence-41300.firebasestorage.app",
+            messagingSenderId: "1032430036880",
+            appId: "1:1032430036880:web:c804671d02070591967515",
+            measurementId: "G-L04Z4059NC"
+          };
+        // const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO", authDomain: "DEMO", projectId: "DEMO" };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-sequence-app';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- DOM Elements ---
+        const gameForm = document.getElementById('game-form');
+        const blueScoreDisplay = document.getElementById('blue-score-display');
+        const greenScoreDisplay = document.getElementById('green-score-display');
+        const formMessage = document.getElementById('form-message');
+        const filterRadios = document.querySelectorAll('input[name="filter-type"]');
+        const sliderContainer = document.getElementById('slider-container');
+        const filterSlider = document.getElementById('filter-slider');
+        const sliderLabel = document.getElementById('slider-label');
+        const sliderValue = document.getElementById('slider-value');
+        const leaderboardContent = document.getElementById('leaderboard-content');
+        const historyList = document.getElementById('history-list');
+        const blueStatsContainer = document.getElementById('blue-stats');
+        const greenStatsContainer = document.getElementById('green-stats');
+        const loadingLeaderboard = document.getElementById('loading-leaderboard');
+        const loadingHistory = document.getElementById('loading-history');
+        const scrollBtns = document.querySelectorAll('.scroll-btn');
+        const editLastGameBtn = document.getElementById('edit-last-game-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const submitBtnText = document.getElementById('submit-btn-text');
+        const winnerBanner = document.getElementById('winner-banner');
+        const winnerBannerText = document.getElementById('winner-banner-text');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const settingsForm = document.getElementById('settings-form');
+        const blueTeamNameInput = document.getElementById('blue-team-name');
+        const greenTeamNameInput = document.getElementById('green-team-name');
+        const blueTeamLabel = document.getElementById('blue-team-label');
+        const greenTeamLabel = document.getElementById('green-team-label');
+
+        let db, auth;
+        let allGames = [];
+        let currentBlueScore = 0;
+        let currentGreenScore = 0;
+        let gameBeingEditedId = null;
+
+        // --- Team Name Management ---
+        const teamNames = {
+            blue: 'Blue Team',
+            green: 'Green Team'
+        };
+
+        function loadTeamNames() {
+            const savedBlueName = localStorage.getItem('blueTeamName');
+            const savedGreenName = localStorage.getItem('greenTeamName');
+            if (savedBlueName) {
+                teamNames.blue = savedBlueName;
+                blueTeamNameInput.value = savedBlueName;
+            }
+            if (savedGreenName) {
+                teamNames.green = savedGreenName;
+                greenTeamNameInput.value = savedGreenName;
+            }
+            updateTeamLabels();
+        }
+
+        function updateTeamLabels() {
+            blueTeamLabel.textContent = teamNames.blue;
+            greenTeamLabel.textContent = teamNames.green;
+        }
+
+        function saveTeamNames(e) {
+            e.preventDefault();
+            const newBlueName = blueTeamNameInput.value.trim() || 'Blue Team';
+            const newGreenName = greenTeamNameInput.value.trim() || 'Green Team';
+            localStorage.setItem('blueTeamName', newBlueName);
+            localStorage.setItem('greenTeamName', newGreenName);
+            teamNames.blue = newBlueName;
+            teamNames.green = newGreenName;
+            updateTeamLabels();
+            renderUI(); // Re-render the UI with the new names
+            settingsModal.classList.add('hidden');
+        }
+
+        // --- Firebase Initialization ---
+        async function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                listenForGames();
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                leaderboardContent.innerHTML = `<p class="text-red-400 text-center col-span-2">Error connecting to database.</p>`;
+                historyList.innerHTML = `<p class="text-red-400 text-center">Could not load game history.</p>`;
+            }
+        }
+
+        // --- Firestore Data Fetching ---
+        function listenForGames() {
+            const gamesCollectionRef = collection(db, `/artifacts/${appId}/public/data/sequence-leaderboard`);
+            const q = query(gamesCollectionRef, orderBy('timestamp', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                allGames = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderUI();
+                // Show/hide edit button based on if games exist
+                if(allGames.length > 0) {
+                    editLastGameBtn.classList.remove('hidden');
+                } else {
+                    editLastGameBtn.classList.add('hidden');
+                }
+            }, (error) => {
+                console.error("Error fetching games:", error);
+                loadingLeaderboard.textContent = "Failed to load stats.";
+                loadingHistory.textContent = "Failed to load history.";
+            });
+        }
+
+        // --- UI Rendering ---
+        function renderUI() {
+            const selectedFilter = document.querySelector('input[name="filter-type"]:checked').value;
+            const sliderVal = parseInt(filterSlider.value);
+            
+            let filteredGames = getFilteredGames(selectedFilter, sliderVal);
+
+            renderLeaderboard(filteredGames);
+            renderHistory(filteredGames);
+            updateWinnerBanner(filteredGames);
+        }
+
+        function getFilteredGames(filter, value) {
+            if (filter === 'lifetime') {
+                return allGames;
+            }
+            if (filter === 'games') {
+                return allGames.slice(0, value);
+            }
+            if (filter === 'days') {
+                const now = new Date();
+                const cutoffDate = new Date(now.setDate(now.getDate() - value));
+                return allGames.filter(game => game.timestamp && game.timestamp.toDate() > cutoffDate);
+            }
+            return [];
+        }
+
+        function calculateStats(games) {
+            const stats = {
+                blue: { wins: 0, losses: 0, totalSequences: 0, gamesPlayed: 0 },
+                green: { wins: 0, losses: 0, totalSequences: 0, gamesPlayed: 0 }
+            };
+
+            games.forEach(game => {
+                stats.blue.gamesPlayed++;
+                stats.green.gamesPlayed++;
+                stats.blue.totalSequences += game.blueScore;
+                stats.green.totalSequences += game.greenScore;
+
+                if (game.winner === 'blue') {
+                    stats.blue.wins++;
+                    stats.green.losses++;
+                } else if (game.winner === 'green') {
+                    stats.green.wins++;
+                    stats.blue.losses++;
+                }
+                // Tie games are not counted as wins or losses for either
+            });
+
+            return stats;
+        }
+
+        function updateWinnerBanner(games) {
+            if (games.length === 0) {
+                winnerBanner.classList.add('hidden');
+                return;
+            }
+            
+            // Determine overall winner from the filtered games for the banner
+            const filteredStats = calculateStats(games);
+            if (filteredStats.blue.wins > filteredStats.green.wins) {
+                winnerBannerText.textContent = `🏆 ${teamNames.blue} is Leading! 🏆`;
+                winnerBanner.className = 'text-center p-3 mb-4 rounded-lg text-white font-bold text-xl tracking-wider banner-blue';
+                winnerBanner.classList.remove('hidden');
+            } else if (filteredStats.green.wins > filteredStats.blue.wins) {
+                winnerBannerText.textContent = `🏆 ${teamNames.green} is Leading! 🏆`;
+                winnerBanner.className = 'text-center p-3 mb-4 rounded-lg text-white font-bold text-xl tracking-wider banner-green';
+                winnerBanner.classList.remove('hidden');
+            } else { // It's a tie
+                winnerBannerText.textContent = '🏁 It\'s a Tie! 🏁';
+                winnerBanner.className = 'text-center p-3 mb-4 rounded-lg text-white font-bold text-xl tracking-wider banner-tie';
+                winnerBanner.classList.remove('hidden');
+            }
+        }
+
+        function renderLeaderboard(games) {
+             if (allGames.length === 0) {
+                loadingLeaderboard.textContent = 'No games recorded yet. Add one to start!';
+                leaderboardContent.classList.add('hidden');
+                return;
+            }
+
+            loadingLeaderboard.classList.add('hidden');
+            leaderboardContent.classList.remove('hidden');
+
+            const stats = calculateStats(games);
+            
+            const createStatHTML = (team, teamStats) => {
+                const winRate = teamStats.gamesPlayed > 0 ? ((teamStats.wins / teamStats.gamesPlayed) * 100).toFixed(1) : 0;
+                const avgSequences = teamStats.gamesPlayed > 0 ? (teamStats.totalSequences / teamStats.gamesPlayed).toFixed(2) : 0;
+                const teamName = team === 'blue' ? teamNames.blue : teamNames.green;
+                const textColorClass = team === 'blue' ? 'text-blue-400' : 'text-green-400';
+                const textGlowClass = team === 'blue' ? 'team-blue-text-glow' : 'team-green-text-glow';
+
+                return `
+                    <h3 class="text-2xl font-bold mb-3 ${textColorClass} ${textGlowClass}">${teamName}</h3>
+                    <div class="space-y-2 text-lg">
+                        <div class="flex justify-between"><span>🏆 Wins:</span> <span class="font-bold">${teamStats.wins}</span></div>
+                        <div class="flex justify-between"><span>💔 Losses:</span> <span class="font-bold">${teamStats.losses}</span></div>
+                        <div class="flex justify-between"><span>📊 Win Rate:</span> <span class="font-bold">${winRate}%</span></div>
+                        <div class="flex justify-between"><span>⭐ Total Seq:</span> <span class="font-bold">${teamStats.totalSequences}</span></div>
+                        <div class="flex justify-between"><span>📈 Avg Seq:</span> <span class="font-bold">${avgSequences}</span></div>
+                    </div>
+                `;
+            };
+
+            blueStatsContainer.innerHTML = createStatHTML('blue', stats.blue);
+            greenStatsContainer.innerHTML = createStatHTML('green', stats.green);
+        }
+
+        function renderHistory(games) {
+            if (allGames.length === 0) {
+                loadingHistory.textContent = 'Game history will appear here.';
+                return;
+            }
+
+            loadingHistory.classList.add('hidden');
+            historyList.innerHTML = ''; // Clear previous list
+
+            if (games.length === 0) {
+                historyList.innerHTML = '<p class="text-gray-400 text-center">No games match the current filter.</p>';
+                return;
+            }
+            
+            games.forEach(game => {
+                const date = game.timestamp ? game.timestamp.toDate().toLocaleDateString() : 'N/A';
+                const winnerClass = game.winner === 'blue' ? 'text-blue-400 font-bold' : game.winner === 'green' ? 'text-green-400 font-bold' : 'text-gray-400 font-bold';
+                const winnerText = game.winner ? `${teamNames[game.winner]} wins` : 'Tie Game';
+                
+                const item = document.createElement('div');
+                item.className = 'history-item flex justify-between items-center bg-gray-800/50 p-3 rounded-lg transition-all duration-200';
+                item.innerHTML = `
+                    <div>
+                        <p class="font-semibold">${date}</p>
+                        <p class="${winnerClass}">${winnerText}</p>
+                    </div>
+                    <div class="text-xl font-bold">
+                        <span class="text-blue-400">${game.blueScore}</span> - <span class="text-green-400">${game.greenScore}</span>
+                    </div>
+                `;
+                historyList.appendChild(item);
+            });
+        }
+        
+        // --- Event Handlers ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const blueScore = currentBlueScore;
+            const greenScore = currentGreenScore;
+
+            if (blueScore !== 3 && greenScore !== 3) {
+                formMessage.textContent = "A team must score exactly 3 sequences to win.";
+                return;
+            }
+            
+            if (blueScore === greenScore) {
+                 formMessage.textContent = "Scores cannot be tied. A winner is required.";
+                 return;
+            }
+            formMessage.textContent = "";
+
+            const winner = blueScore > greenScore ? 'blue' : 'green';
+            const gameData = { blueScore, greenScore, winner };
+
+            try {
+                if (gameBeingEditedId) {
+                    // This is an update to an existing game
+                    const gameDocRef = doc(db, `/artifacts/${appId}/public/data/sequence-leaderboard`, gameBeingEditedId);
+                    await updateDoc(gameDocRef, gameData);
+                } else {
+                    // This is a new game
+                    gameData.timestamp = serverTimestamp();
+                    const gamesCollectionRef = collection(db, `/artifacts/${appId}/public/data/sequence-leaderboard`);
+                    await addDoc(gamesCollectionRef, gameData);
+                }
+                resetFormState();
+            } catch (error) {
+                console.error("Error saving document: ", error);
+                formMessage.textContent = "Failed to save game.";
+            }
+        }
+        
+        function handleFilterChange() {
+            const selectedFilter = document.querySelector('input[name="filter-type"]:checked').value;
+            if (selectedFilter === 'games' || selectedFilter === 'days') {
+                sliderContainer.classList.remove('hidden');
+                updateSliderLabel(selectedFilter);
+            } else {
+                sliderContainer.classList.add('hidden');
+            }
+            renderUI();
+        }
+
+        function updateSliderLabel(filterType) {
+            const value = filterSlider.value;
+            if (filterType === 'games') {
+                sliderLabel.textContent = `Last ${value} Games`;
+            } else if (filterType === 'days') {
+                sliderLabel.textContent = `Last ${value} Days`;
+            }
+             sliderValue.textContent = value;
+        }
+
+        function handleScroll(team, direction) {
+            if (team === 'blue') {
+                currentBlueScore += (direction === 'up' ? 1 : -1);
+                if (currentBlueScore < 0) currentBlueScore = 0;
+                if (currentBlueScore > 3) currentBlueScore = 3;
+                blueScoreDisplay.textContent = currentBlueScore;
+            } else if (team === 'green') {
+                currentGreenScore += (direction === 'up' ? 1 : -1);
+                if (currentGreenScore < 0) currentGreenScore = 0;
+                if (currentGreenScore > 3) currentGreenScore = 3;
+                greenScoreDisplay.textContent = currentGreenScore;
+            }
+        }
+
+        function handleEditLastGame() {
+            if (allGames.length === 0) return;
+            const lastGame = allGames[0];
+            gameBeingEditedId = lastGame.id;
+
+            currentBlueScore = lastGame.blueScore;
+            currentGreenScore = lastGame.greenScore;
+            blueScoreDisplay.textContent = currentBlueScore;
+            greenScoreDisplay.textContent = currentGreenScore;
+
+            submitBtnText.textContent = 'Update Game';
+            cancelEditBtn.classList.remove('hidden');
+            document.getElementById('score-entry').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetFormState() {
+            currentBlueScore = 0;
+            currentGreenScore = 0;
+            blueScoreDisplay.textContent = 0;
+            greenScoreDisplay.textContent = 0;
+            gameBeingEditedId = null;
+            formMessage.textContent = '';
+            
+            submitBtnText.textContent = 'Save Game';
+            cancelEditBtn.classList.add('hidden');
+            gameForm.reset(); // Resets radio buttons if they were part of the form
+        }
+
+        // --- Attach Event Listeners ---
+        gameForm.addEventListener('submit', handleFormSubmit);
+        filterRadios.forEach(radio => radio.addEventListener('change', handleFilterChange));
+        filterSlider.addEventListener('input', () => {
+             const selectedFilter = document.querySelector('input[name="filter-type"]:checked').value;
+             updateSliderLabel(selectedFilter);
+             renderUI();
+        });
+        scrollBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const team = btn.dataset.team;
+                const direction = btn.classList.contains('scroll-up') ? 'up' : 'down';
+                handleScroll(team, direction);
+            });
+        });
+        editLastGameBtn.addEventListener('click', handleEditLastGame);
+        cancelEditBtn.addEventListener('click', resetFormState);
+        settingsForm.addEventListener('submit', saveTeamNames);
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('hidden');
+        });
+        closeModalBtn.addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+        });
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+             loadTeamNames();
+             initializeFirebase();
+             handleFilterChange(); // Set initial state of the slider
+        });
+
+    </script>
+</body>
+</html>

@@ -363,7 +363,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, linkWithPopup, signInWithCredential } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Enable Firestore debug logging
@@ -471,29 +471,37 @@
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        // User is signed in
-                        console.log("User signed in:", user.uid);
-                        userInfoDiv.innerHTML = `<p class="text-sm text-gray-400">Signed in as: <span class="font-bold text-gray-200">${user.displayName || user.email}</span></p>`;
-                        userInfoDiv.classList.remove('hidden');
-                        googleSignInBtn.classList.add('hidden');
-                        signOutBtn.classList.remove('hidden');
-                        gameForm.querySelector('button[type="submit"]').disabled = false;
+                        // User is signed in.
+                        // Check if it's an anonymous user.
+                        if (user.isAnonymous) {
+                            console.log("User is an anonymous user.");
+                            userInfoDiv.innerHTML = `<p class="text-sm text-gray-400">Signed in as: <span class="font-bold text-gray-200">Guest</span></p>`;
+                            googleSignInBtn.textContent = 'Sign In with Google';
+                            googleSignInBtn.classList.remove('hidden');
+                            signOutBtn.classList.add('hidden');
+                        } else {
+                            // It's a non-anonymous user (e.g., Google signed-in user).
+                            console.log("User signed in:", user.uid);
+                            userInfoDiv.innerHTML = `<p class="text-sm text-gray-400">Signed in as: <span class="font-bold text-gray-200">${user.displayName || user.email}</span></p>`;
+                            googleSignInBtn.classList.add('hidden');
+                            signOutBtn.classList.remove('hidden');
+                        }
                         
+                        userInfoDiv.classList.remove('hidden');
+                        gameForm.querySelector('button[type="submit"]').disabled = false;
                         listenForGames(); // Fetch data for the logged-in user
                     } else {
-                        // User is signed out
-                        console.log("User signed out.");
-                        userInfoDiv.classList.add('hidden');
-                        googleSignInBtn.classList.remove('hidden');
-                        signOutBtn.classList.add('hidden');
-                        gameForm.querySelector('button[type="submit"]').disabled = true;
+                        // User is signed out. Sign them in anonymously by default.
+                        console.log("No user found. Signing in anonymously...");
+                        signInAnonymously(auth).catch((error) => {
+                            console.error("Anonymous sign-in failed:", error);
+                            loadingLeaderboard.textContent = 'Failed to sign in. Please try again.';
+                            loadingHistory.textContent = '';
+                        });
 
-
-                        // If a listener is active, detach it
                         if (unsubscribe) {
                             unsubscribe();
                         }
-                        // Clear the UI
                         allGames = [];
                         renderUI();
                         loadingLeaderboard.textContent = 'Please sign in to view stats.';
@@ -503,6 +511,8 @@
                         loadingHistory.classList.remove('hidden');
                         historyList.innerHTML = '';
                         editLastGameBtn.classList.add('hidden');
+                        gameForm.querySelector('button[type="submit"]').disabled = true;
+
                     }
                 });
 
@@ -512,29 +522,54 @@
                 historyList.innerHTML = `<p class="text-red-400 text-center">Could not load game history.</p>`;
             }
         }
-        
+
         async function signInWithGoogle() {
             const provider = new GoogleAuthProvider();
             try {
-                await signInWithPopup(auth, provider);
-                // The onAuthStateChanged listener will handle the UI update
+                const user = auth.currentUser;
+                if (user && user.isAnonymous) {
+                    // Attempt to link the anonymous user with Google account
+                    await linkWithPopup(user, provider);
+                    console.log("Anonymous account successfully linked with Google.");
+                } else {
+                    // This case should not be reached with the default anonymous sign-in logic,
+                    // but is a safe fallback.
+                    await signInWithPopup(auth, provider);
+                }
                 settingsModal.classList.add('hidden');
             } catch (error) {
-                console.error("Error signing in with Google:", error);
-                formMessage.textContent = "Google Sign-In failed.";
+                // Handle the specific case where the credential is already in use
+                if (error.code === 'auth/credential-already-in-use') {
+                    console.log("Account already exists with this Google credential. Signing in instead.");
+                    try {
+                        // Get the Google credential from the error object
+                        const credential = GoogleAuthProvider.credentialFromError(error);
+                        // Sign in the user with their existing account
+                        await signInWithCredential(auth, credential);
+                        console.log("Successfully signed in with existing account.");
+                        formMessage.textContent = "Welcome back!";
+                        settingsModal.classList.add('hidden');
+                    } catch (signInError) {
+                        console.error("Error signing in with existing credential:", signInError);
+                        formMessage.textContent = "Sign-in failed. Please try again or use another account.";
+                    }
+                } else {
+                    // Handle other potential errors
+                    console.error("Error linking or signing in:", error);
+                    formMessage.textContent = "Google Sign-In failed.";
+                }
             }
         }
 
         async function signOutUser() {
             try {
                 await signOut(auth);
+                console.log("User signed out.");
                 // The onAuthStateChanged listener will handle the UI update
             } catch (error) {
                 console.error("Error signing out:", error);
             }
         }
-
-
         // --- Firestore Data Fetching ---
         function listenForGames() {
             // Detach any existing listener before attaching a new one

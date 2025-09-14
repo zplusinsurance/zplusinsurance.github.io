@@ -202,6 +202,19 @@
             width: 90%;
             position: relative;
         }
+         .btn-google {
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem; /* 12px */
+        }
+        .btn-google:hover {
+            background-color: #357ae8;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-fixed" style="background-image: linear-gradient(to bottom right, #1a1a2e, #16213e);">
@@ -212,11 +225,8 @@
         <header class="text-center mb-8 md:mb-12 relative">
             <h1 class="game-title text-4xl sm:text-5xl md:text-6xl tracking-wider">SEQUENCE</h1>
             <p class="text-lg text-gray-400">Leaderboard & Score Tracker</p>
-            <button id="settings-btn" class="absolute top-0 right-0 p-2 text-gray-400 hover:text-white transition-colors duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 5.4 19.4a1.65 1.65 0 0 0-1.82-.33l-.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.82.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82z" />
-                </svg>
+            <button id="settings-btn" style="font-size: xx-large" class="absolute top-0 right-0 p-2 text-gray-400 hover:text-white transition-colors duration-200">
+                ⚙️
             </button>
         </header>
 
@@ -320,8 +330,22 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
-                <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-white">Account Settings</h2>
+                <h2 class="text-2xl font-bold mb-6 border-b border-gray-700 pb-2 text-white">Settings</h2>
+                
+                <!-- Auth Section -->
+                <div class="mb-6 pb-6 border-b border-gray-700">
+                     <h3 class="text-xl font-bold mb-4 text-white">Account</h3>
+                     <div id="user-info" class="mb-4 hidden"></div>
+                     <button id="google-signin-btn" class="btn-google w-full font-bold py-3 px-4 rounded-lg shadow-lg">
+                        <svg class="w-5 h-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"></path><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"></path><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.021 35.849 44 30.138 44 24c0-1.341-.138-2.65-.389-3.917z"></path></svg>
+                        Sign In with Google
+                    </button>
+                    <button id="signout-btn" class="hidden w-full bg-red-600 text-white font-bold py-2 px-4 rounded-lg mt-2 hover:bg-red-700 transition-colors">Sign Out</button>
+                </div>
+
+                <!-- Team Names Section -->
                 <form id="settings-form" class="space-y-4">
+                     <h3 class="text-xl font-bold mb-4 text-white">Team Names</h3>
                     <div>
                         <label for="blue-team-name" class="block text-sm font-medium text-gray-300">Blue Team Name</label>
                         <input type="text" id="blue-team-name" placeholder="e.g. The Blue Barracudas" class="form-input mt-1 block w-full rounded-md p-2">
@@ -339,7 +363,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Enable Firestore debug logging
@@ -389,9 +413,13 @@
         const greenTeamNameInput = document.getElementById('green-team-name');
         const blueTeamLabel = document.getElementById('blue-team-label');
         const greenTeamLabel = document.getElementById('green-team-label');
+        const googleSignInBtn = document.getElementById('google-signin-btn');
+        const signOutBtn = document.getElementById('signout-btn');
+        const userInfoDiv = document.getElementById('user-info');
 
         let db, auth;
         let allGames = [];
+        let unsubscribe; // To store the onSnapshot listener
         let currentBlueScore = 0;
         let currentGreenScore = 0;
         let gameBeingEditedId = null;
@@ -434,33 +462,90 @@
             settingsModal.classList.add('hidden');
         }
 
-        // --- Firebase Initialization ---
+        // --- Firebase Initialization & Auth ---
         async function initializeFirebase() {
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
 
-                listenForGames();
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        // User is signed in
+                        console.log("User signed in:", user.uid);
+                        userInfoDiv.innerHTML = `<p class="text-sm text-gray-400">Signed in as: <span class="font-bold text-gray-200">${user.displayName || user.email}</span></p>`;
+                        userInfoDiv.classList.remove('hidden');
+                        googleSignInBtn.classList.add('hidden');
+                        signOutBtn.classList.remove('hidden');
+                        gameForm.querySelector('button[type="submit"]').disabled = false;
+                        
+                        listenForGames(); // Fetch data for the logged-in user
+                    } else {
+                        // User is signed out
+                        console.log("User signed out.");
+                        userInfoDiv.classList.add('hidden');
+                        googleSignInBtn.classList.remove('hidden');
+                        signOutBtn.classList.add('hidden');
+                        gameForm.querySelector('button[type="submit"]').disabled = true;
+
+
+                        // If a listener is active, detach it
+                        if (unsubscribe) {
+                            unsubscribe();
+                        }
+                        // Clear the UI
+                        allGames = [];
+                        renderUI();
+                        loadingLeaderboard.textContent = 'Please sign in to view stats.';
+                        loadingLeaderboard.classList.remove('hidden');
+                        leaderboardContent.classList.add('hidden');
+                        loadingHistory.textContent = 'Please sign in to view game history.';
+                        loadingHistory.classList.remove('hidden');
+                        historyList.innerHTML = '';
+                        editLastGameBtn.classList.add('hidden');
+                    }
+                });
+
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
                 leaderboardContent.innerHTML = `<p class="text-red-400 text-center col-span-2">Error connecting to database.</p>`;
                 historyList.innerHTML = `<p class="text-red-400 text-center">Could not load game history.</p>`;
             }
         }
+        
+        async function signInWithGoogle() {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+                // The onAuthStateChanged listener will handle the UI update
+                settingsModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Error signing in with Google:", error);
+                formMessage.textContent = "Google Sign-In failed.";
+            }
+        }
+
+        async function signOutUser() {
+            try {
+                await signOut(auth);
+                // The onAuthStateChanged listener will handle the UI update
+            } catch (error) {
+                console.error("Error signing out:", error);
+            }
+        }
+
 
         // --- Firestore Data Fetching ---
         function listenForGames() {
-            const gamesCollectionRef = collection(db, `/artifacts/${appId}/public/data/sequence-leaderboard`);
+            // Detach any existing listener before attaching a new one
+            if (unsubscribe) {
+                unsubscribe();
+            }
+
+            const gamesCollectionRef = collection(db, `/artifacts/${appId}/users/${auth.currentUser.uid}/sequence-leaderboard`);
             const q = query(gamesCollectionRef, orderBy('timestamp', 'desc'));
 
-            onSnapshot(q, (snapshot) => {
+            unsubscribe = onSnapshot(q, (snapshot) => {
                 allGames = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderUI();
                 // Show/hide edit button based on if games exist
@@ -552,6 +637,11 @@
         }
 
         function renderLeaderboard(games) {
+             if (!auth || !auth.currentUser) {
+                 loadingLeaderboard.textContent = 'Please sign in to view stats.';
+                 leaderboardContent.classList.add('hidden');
+                 return;
+             }
              if (allGames.length === 0) {
                 loadingLeaderboard.textContent = 'No games recorded yet. Add one to start!';
                 leaderboardContent.classList.add('hidden');
@@ -587,6 +677,11 @@
         }
 
         function renderHistory(games) {
+            if (!auth || !auth.currentUser) {
+                loadingHistory.textContent = 'Please sign in to view game history.';
+                historyList.innerHTML = '';
+                return;
+             }
             if (allGames.length === 0) {
                 loadingHistory.textContent = 'Game history will appear here.';
                 return;
@@ -623,6 +718,11 @@
         // --- Event Handlers ---
         async function handleFormSubmit(e) {
             e.preventDefault();
+            if (!auth.currentUser) {
+                formMessage.textContent = "You must be signed in to save a game.";
+                return;
+            }
+
             const blueScore = currentBlueScore;
             const greenScore = currentGreenScore;
 
@@ -643,12 +743,12 @@
             try {
                 if (gameBeingEditedId) {
                     // This is an update to an existing game
-                    const gameDocRef = doc(db, `/artifacts/${appId}/public/data/sequence-leaderboard`, gameBeingEditedId);
+                    const gameDocRef = doc(db, `/artifacts/${appId}/users/${auth.currentUser.uid}/sequence-leaderboard`, gameBeingEditedId);
                     await updateDoc(gameDocRef, gameData);
                 } else {
                     // This is a new game
                     gameData.timestamp = serverTimestamp();
-                    const gamesCollectionRef = collection(db, `/artifacts/${appId}/public/data/sequence-leaderboard`);
+                    const gamesCollectionRef = collection(db, `/artifacts/${appId}/users/${auth.currentUser.uid}/sequence-leaderboard`);
                     await addDoc(gamesCollectionRef, gameData);
                 }
                 resetFormState();
@@ -745,6 +845,9 @@
         closeModalBtn.addEventListener('click', () => {
             settingsModal.classList.add('hidden');
         });
+        googleSignInBtn.addEventListener('click', signInWithGoogle);
+        signOutBtn.addEventListener('click', signOutUser);
+
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -756,3 +859,4 @@
     </script>
 </body>
 </html>
+

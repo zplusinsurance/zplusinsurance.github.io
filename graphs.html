@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Statistics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-8">Game Statistics</h1>
+        <div id="loading-message" class="text-center text-xl text-gray-400">Loading charts...</div>
+        <div id="charts-container" class="hidden grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="text-xl font-bold mb-4">Game Outcomes Over Time</h2>
+                <canvas id="outcomesChart"></canvas>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="text-xl font-bold mb-4">Winning Streaks</h2>
+                <canvas id="winningStreaksChart"></canvas>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="text-xl font-bold mb-4">Cumulative Wins</h2>
+                <canvas id="cumulativeWinsChart"></canvas>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="text-xl font-bold mb-4">Cumulative Game Win Differential (The "Tug-of-War")</h2>
+                <canvas id="cumulativeGameWinDifferentialChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Configuration --- 
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxG-2V9tKpB5CYWqi_kN6liohv6Y6AovY",
+            authDomain: "sequence-41300.firebaseapp.com",
+            projectId: "sequence-41300",
+            storageBucket: "sequence-41300.firebasestorage.app",
+            messagingSenderId: "1032430036880",
+            appId: "1:1032430036880:web:c804671d02070591967515",
+            measurementId: "G-L04Z4059NC"
+        };
+        const appId = 'default-sequence-app'; // Using the default app ID as in index.html
+
+        // --- Global Variables ---
+        let db, auth;
+        let allGames = [];
+        let unsubscribe;
+        let outcomesChartInstance, winningStreaksChartInstance, cumulativeWinsChartInstance, cumulativeGameWinDifferentialChartInstance;
+        
+        const loadingMessage = document.getElementById('loading-message');
+        const chartsContainer = document.getElementById('charts-container');
+
+        // --- Firebase Initialization & Auth ---
+        async function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        console.log("User signed in:", user.uid);
+                        listenForGames();
+                    } else {
+                        console.log("No user found. Signing in anonymously...");
+                        signInAnonymously(auth).catch((error) => {
+                            console.error("Anonymous sign-in failed:", error);
+                            loadingMessage.textContent = 'Error signing in. Cannot load charts.';
+                        });
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                loadingMessage.textContent = 'Error connecting to the database.';
+            }
+        }
+
+        // --- Firestore Data Fetching ---
+        function listenForGames() {
+            if (unsubscribe) unsubscribe();
+
+            const gamesCollectionRef = collection(db, `/artifacts/${appId}/users/${auth.currentUser.uid}/sequence-leaderboard`);
+            const q = query(gamesCollectionRef, orderBy('timestamp', 'asc')); // Fetch in ascending order for time-series charts
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                allGames = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (allGames.length > 0) {
+                    loadingMessage.classList.add('hidden');
+                    chartsContainer.classList.remove('hidden');
+                    renderCharts(allGames);
+                } else {
+                    chartsContainer.classList.add('hidden');
+                    loadingMessage.classList.remove('hidden');
+                    loadingMessage.textContent = 'No game data found. Play a game to see the charts!';
+                }
+            }, (error) => {
+                console.error("Error fetching games:", error);
+                loadingMessage.textContent = "Failed to load game data.";
+            });
+        }
+
+        // --- Chart Rendering ---
+        function renderCharts(games) {
+            renderOutcomesChart(games);
+            renderWinningStreaksChart(games);
+            renderCumulativeWinsChart(games);
+            renderCumulativeGameWinDifferentialChart(games);
+        }
+
+        function renderCumulativeGameWinDifferentialChart(games) {
+            const ctx = document.getElementById('cumulativeGameWinDifferentialChart').getContext('2d');
+            let cumulativeDifferential = 0;
+            const differentialData = games.map(game => {
+                if (game.winner === 'blue') {
+                    cumulativeDifferential++;
+                } else if (game.winner === 'green') {
+                    cumulativeDifferential--;
+                }
+                return { x: game.timestamp.toDate(), y: cumulativeDifferential };
+            });
+
+            if (cumulativeGameWinDifferentialChartInstance) {
+                cumulativeGameWinDifferentialChartInstance.destroy();
+            }
+
+            cumulativeGameWinDifferentialChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Cumulative Game Win Differential (Blue - Green)',
+                        data: differentialData,
+                        borderColor: '#FBBF24',
+                        backgroundColor: 'transparent',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Cumulative Game Win Differential Over Time'
+                        }
+                    },
+                    scales: {
+                        x: { type: 'time', time: { unit: 'day' }, title: { display: true, text: 'Date' } },
+                        y: { beginAtZero: false, title: { display: true, text: 'Game Win Differential' } }
+                    }
+                }
+            });
+        }
+
+        function renderCumulativeWinsChart(games) {
+            const ctx = document.getElementById('cumulativeWinsChart').getContext('2d');
+            let blueCumulativeWins = 0;
+            let greenCumulativeWins = 0;
+
+            const blueData = games.map(game => {
+                if (game.winner === 'blue') blueCumulativeWins++;
+                return { x: game.timestamp.toDate(), y: blueCumulativeWins };
+            });
+            const greenData = games.map(game => {
+                 if (game.winner === 'green') greenCumulativeWins++;
+                return { x: game.timestamp.toDate(), y: greenCumulativeWins };
+            });
+            
+            // We need to re-calculate green wins separately to avoid cumulative errors
+            greenCumulativeWins = 0;
+            const finalGreenData = games.map(game => {
+                if (game.winner === 'green') greenCumulativeWins++;
+                return { x: game.timestamp.toDate(), y: greenCumulativeWins };
+            });
+
+            if(cumulativeWinsChartInstance) cumulativeWinsChartInstance.destroy();
+
+            cumulativeWinsChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Blue Team Cumulative Wins',
+                        data: blueData,
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'transparent',
+                        tension: 0.1
+                    }, {
+                        label: 'Green Team Cumulative Wins',
+                        data: finalGreenData,
+                        borderColor: '#22C55E',
+                        backgroundColor: 'transparent',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'Cumulative Wins Over Time' } },
+                    scales: {
+                        x: { type: 'time', time: { unit: 'day' }, title: { display: true, text: 'Date' } },
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        function renderOutcomesChart(games) {
+            const ctx = document.getElementById('outcomesChart').getContext('2d');
+            const data = games.map(game => ({
+                x: game.timestamp.toDate(),
+                y: game.winner === 'blue' ? 1 : (game.winner === 'green' ? -1 : 0)
+            }));
+
+            if(outcomesChartInstance) outcomesChartInstance.destroy();
+
+            outcomesChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { datasets: [{ label: 'Game Winner', data, borderColor: '#A78BFA', backgroundColor: 'transparent', stepped: true }] },
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'Game Outcomes Over Time' } },
+                    scales: {
+                        x: { type: 'time', time: { unit: 'day' }, title: { display: true, text: 'Date' } },
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    if (value === 1) return 'Blue';
+                                    if (value === -1) return 'Green';
+                                    if (value === 0) return 'Tie';
+                                    return null;
+                                }
+                            },
+                            min: -1.5,
+                            max: 1.5
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderWinningStreaksChart(games) {
+            const ctx = document.getElementById('winningStreaksChart').getContext('2d');
+            let currentStreak = 0;
+            let lastWinner = null;
+            const streakData = [];
+
+            games.forEach(game => {
+                if (game.winner === lastWinner) {
+                    currentStreak++;
+                } else {
+                    currentStreak = 1;
+                }
+                lastWinner = game.winner;
+                streakData.push({x: game.timestamp.toDate(), y: currentStreak});
+            });
+
+            const backgroundColors = games.map(game => game.winner === 'blue' ? '#3B82F6' : '#22C55E');
+
+            if(winningStreaksChartInstance) winningStreaksChartInstance.destroy();
+
+            winningStreaksChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { datasets: [{ label: 'Winning Streak Length', data: streakData, backgroundColor: backgroundColors }] },
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'Winning Streaks Over Time' } },
+                    scales: {
+                        x: { type: 'time', time: { unit: 'day' }, title: { display: true, text: 'Date' } },
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Streak Length' } }
+                    }
+                }
+            });
+        }
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
+
+    </script>
+
+</body>
+</html>
